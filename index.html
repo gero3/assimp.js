@@ -1,0 +1,194 @@
+<html>
+<head>
+	<meta charset="UTF-8" />
+	<title>assimp.js</title>
+	<style>
+	body {
+					color: #000;
+					font-family: Monospace;
+					font-size: 13px;
+					text-align: center;
+					background-color: #000;
+					margin: 0px;
+					overflow: hidden;
+			}
+			#info {
+				color: #fff;
+				position: absolute;
+				top: 10px;
+				width: 100%;
+				text-align: center;
+				z-index: 100;
+				display:block;
+			}
+			a { color: skyblue }
+			.button { background:#999; color:#eee; padding:0.2em 0.5em; cursor:pointer }
+			.highlight { background:orange; color:#fff; }
+			span {
+				display: inline-block;
+				width: 60px;
+				float: left;
+				text-align: center;
+			}
+	</style>
+</head>
+<body>
+    
+    <div id="info">
+    <input type="file" id="inputFiles" multiple></file><br />
+    </div>
+    <div id="container"></div>
+    
+	<script src="assimp.js"></script>
+	<script src="three.js"></script>
+	<script src="AssimpLoader.js"></script>
+	<script src="OrbitControls.js"></script>
+	<script src="stats.js"></script>
+	<script>
+	    THREE.ImageUtils.loadTexture = function(imagepath){
+            console.log(possibleImages.length);
+            
+            var filename = imagepath.substring(imagepath.lastIndexOf('/')+1);
+            var image; 
+            possibleImages.forEach(function(o){
+                if (o.name.toLowerCase() === filename.toLowerCase()){
+                    image = o.image;
+                }
+            });
+            if (! image){
+                image = new Image();
+                console.log(imagepath + "is not found.")
+                //debugger;
+            }
+    		var texture = new THREE.Texture();
+    		var isJPEG = imagepath.search( /\.(jpg|jpeg)$/ ) > 0;
+
+			texture.format = isJPEG ? THREE.RGBFormat : THREE.RGBAFormat;
+			texture.needsUpdate = true;
+    		texture.image = image;
+    		return texture;
+
+	    }
+	    
+	</script>
+	
+	<script>
+	
+	    
+
+		//if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+		var container, stats;
+		var camera, scene, renderer;
+		var animation;
+		init();
+		function init() {
+			container = document.getElementById( 'container' );
+			camera = new THREE.PerspectiveCamera( 25, window.innerWidth / window.innerHeight, 1, 10000 );
+			camera.position.set( 0, 1150, -600 );
+			camera.up.set( 0, 0, 1 );
+			camera.lookAt( new THREE.Vector3( 0, 0, 0 ) );
+			scene = new THREE.Scene();
+/*			var ambient = new THREE.HemisphereLight( 0x8888fff, 0xff8888, 0.5 );
+			ambient.position.set( 0, 1, 0 );
+			scene.add( ambient );*/
+			
+			scene.add( new THREE.AmbientLight( 0x666666 ) );
+/*			var light = new THREE.DirectionalLight( 0xffffff );
+			light.position.set( 4, 4,0 ).normalize();
+			scene.add( light );
+			
+			var light = new THREE.DirectionalLight( 0xffffff );
+			light.position.set( -4, 4,0 ).normalize();
+			scene.add( light );*/
+			
+/*			var light = new THREE.DirectionalLight( 0xdfebff, 1.75 );
+				light.position.set( 50, 200, 100 );
+				light.position.multiplyScalar( 1.3 );
+				scene.add( light );
+*/			
+			renderer = new THREE.WebGLRenderer( { antialias: true } );
+			renderer.setPixelRatio( window.devicePixelRatio );
+			renderer.setSize( window.innerWidth-30, window.innerHeight-30 );
+			container.appendChild( renderer.domElement );
+			var controls = new THREE.OrbitControls( camera, renderer.domElement );
+			//stats = new Stats();
+			//container.appendChild( stats.dom );
+			window.addEventListener( 'resize', onWindowResize, false );
+			animate();
+		}
+		function onWindowResize() {
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
+			renderer.setSize( window.innerWidth, window.innerHeight );
+		}
+		function animate() {
+			requestAnimationFrame( animate, renderer.domElement );
+			renderer.render( scene, camera );
+			if ( animation ) animation.setTime( performance.now() / 1000 );
+			//stats.update();
+		}
+		</script>
+	</script>
+	<script>
+	
+	    var binary = true;
+	    var extensionregex =/^.+\.3d$|^.+\.3ds$|^.+\.ac$|^.+\.ac3d$|^.+\.acc$|^.+\.amf$|^.+\.ase$|^.+\.ask$|^.+\.assbin$|^.+\.b3d$|^.+\.blend$|^.+\.bvh$|^.+\.cob$|^.+\.csm$|^.+\.dae$|^.+\.dxf$|^.+\.enff$|^.+\.fbx$|^.+\.glb$|^.+\.gltf$|^.+\.hmp$|^.+\.ifc$|^.+\.ifczip$|^.+\.irr$|^.+\.irrmesh$|^.+\.lwo$|^.+\.lws$|^.+\.lxo$|^.+\.md2$|^.+\.md3$|^.+\.md5anim$|^.+\.md5camera$|^.+\.md5mesh$|^.+\.mdc$|^.+\.mdl$|^.+\.mesh$|^.+\.mesh.xml$|^.+\.mot$|^.+\.ms3d$|^.+\.ndo$|^.+\.nff$|^.+\.obj$|^.+\.off$|^.+\.ogex$|^.+\.pk3$|^.+\.ply$|^.+\.prj$|^.+\.q3o$|^.+\.q3s$|^.+\.raw$|^.+\.scn$|^.+\.sib$|^.+\.smd$|^.+\.stl$|^.+\.stp$|^.+\.ter$|^.+\.uc$|^.+\.vta$|^.+\.x$|^.+\.x3d$|^.+\.xgl$|^.+\.xml$|^.+\.zgl/gi;
+	    var inputFiles = document.getElementById("inputFiles");
+	    var possibleImages = [];
+	    inputFiles.onchange = function(e){
+	        var files = event.target.files;
+    		if (files && files[0]) {
+    		    for( var i =0; i < files.length; i++){
+    		        (function(file){
+    		            
+            			var reader = new FileReader ();
+            			 var filename = file.name;
+            			 
+            			if (!extensionregex.test(filename)){
+            			    
+            			    var image = new Image();
+            			    possibleImages.push({name:filename, image:image}); 
+            			    reader.onload = function (e) {
+            			        image.src = e.target.result;
+            			    }
+            			    
+                            reader.readAsDataURL(file);
+            			    
+    				    } else {
+    				    
+                    		reader.onload = function (e) {
+                				try {
+                                    if( binary ){
+                				        var dumpfile = filename.replace(/\.[^/.]+$/, ".assbin")
+                                    } else {
+                				        var dumpfile = filename.replace(/\.[^/.]+$/, ".assxml")
+                                    }
+                					FS.writeFile(filename, new Uint8Array(reader.result), {encoding:"binary", flags: "w+"});
+                					
+                					console.log(Module.callMain(["info", filename]));
+                					
+                                    if( binary ){
+                					    Module.callMain(["dump", filename, "-b", "-tri"]);
+                                    } else {
+                					    Module.callMain(["dump", filename, "-tri"]);
+                                    } 
+                					scene.add(THREE.AssimpLoader.prototype.parse(FS.readFile(dumpfile).buffer, dumpfile).object);
+                					FS.unlink(filename);
+                					FS.unlink(dumpfile);
+
+                				} catch (oops) {
+                					console.log(oops);
+                					throw oops;
+                				}
+            			    }
+            			    reader.readAsArrayBuffer(file);
+    				    }
+        			
+    		        }(files[i]));
+    			
+    		    };
+    		}
+	    }
+	</script>
+</body>
+</html>
